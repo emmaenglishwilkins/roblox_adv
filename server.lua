@@ -1,6 +1,10 @@
 -- configuration file
 local rs = game.ReplicatedStorage
 local config = require(rs:WaitForChild("CONFIGURATION"))
+-- keeping track of tagged player
+local currentTagged = Instance.new("ObjectValue")
+currentTagged.Parent = rs
+currentTagged.Name = "Current Tagged Character"
 -- players 
 local players = game:GetService("Players")
 local livingPlayers = {} -- array
@@ -19,6 +23,19 @@ function getLivingPlayers()
 	return livingPlayers
 end
 
+
+
+function tag(character)
+	print("Tagging", character)
+	character.Humanoid.WalkSpeed = config.TaggedSpeed
+	currentTagged.Value = character
+end
+
+function untag(character)
+	print("untagging", character)
+	character.Humanoid.WalkSpeed = config.RunnerSpeed
+end
+
 livingPlayers = getLivingPlayers()
 while #livingPlayers < config.MinimumPlayersNeeded do 
 	-- if there are not enough players 
@@ -32,13 +49,43 @@ end
 
 print("Enough players have joined")
 print(livingPlayers)
+currentTagged.Value = nil 
 
 local map = workspace.GrassMap
+local tagTicket = true
 
 for _, character in pairs(livingPlayers) do
 	character.Humanoid.WalkSpeed = config.RunnerSpeed
 	character.HumanoidRootPart.CFrame = map.start.CFrame + Vector3.new(0,15,0)
 	local player = players:GetPlayerFromCharacter(character)
 	player.RespawnLocation = map.start
+	
+	character.Humanoid.Touched:Connect(function(part)
+		if tagTicket then
+			tagTicket = false
+			local character2 = part.Parent
+			if game.Players:GetPlayerFromCharacter(character2) then
+				if character == currentTagged.Value then
+					untag(character)
+					tag(character2)
+					wait(2)
+				elseif character2 == currentTagged.Value then
+					untag(character2)
+					tag(character)
+					wait(2)
+				end
+			end
+		end
+		tagTicket = true
+	end)
+end
+
+livingPlayers = getLivingPlayers()
+
+if #livingPlayers > 1 and currentTagged.Value == nil then
+	local randomCharacter = livingPlayers[Random.new():NextInteger(1,#livingPlayers)]
+	print("made it inside if statement")
+	tag(randomCharacter)
+	print("after tag function call")
 end
 
