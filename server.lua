@@ -68,6 +68,19 @@ local function countdown(seconds)
 	end
 end
 
+local function explode()
+	local explosion = Instance.new("Explosion")
+	explosion.DestroyJointRadiusPercent = 0
+	explosion.Position = currentTagged.Value.HumanoidRootPart.Position
+	explosion.Parent = workspace
+	
+	local player = players:GetPlayerFromCharacter(currentTagged.Value)
+	player.RespawnLocation = workspace.lobby
+	
+	currentTagged.Value.Humanoid.Health = 0
+	currentTagged.Value = nil
+end
+
 livingPlayers = getLivingPlayers()
 while #livingPlayers < config.MinimumPlayersNeeded do 
 	-- if there are not enough players 
@@ -122,3 +135,4 @@ if #livingPlayers > 1 and currentTagged.Value == nil then
 end
 
 countdown(config.ExplodeTime[#livingPlayers])
+explode()
