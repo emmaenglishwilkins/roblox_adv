@@ -8,20 +8,26 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
+-- Find SpawnLocation and get its CFrame
+local spawnLocation = workspace:FindFirstChild("SpawnLocation")
+if not spawnLocation then
+	warn("SpawnLocation not found in workspace!")
+	return
+end
+local spawnCFrame = spawnLocation.CFrame
 
-local function spawnGroundPiece(position)
-	print("Spawning ground at:", position)
+local function spawnGroundPiece(positionCFrame)
+	print("Spawning ground at:", positionCFrame.Position)
 	local model = groundTemplate:Clone()
 
 	-- Preserve the original orientation while setting the position
 	local originalCFrame = groundTemplate:GetPivot()
-	local newCFrame = CFrame.new(position.Position) * CFrame.Angles(originalCFrame:ToEulerAnglesXYZ())
+	local newCFrame = positionCFrame * CFrame.Angles(originalCFrame:ToEulerAnglesXYZ())
 
 	model:PivotTo(newCFrame)
 	model.Parent = workspace
 	table.insert(groundPieces, model)
 end
-
 
 local function updateGround()
 	while true do
@@ -37,8 +43,8 @@ local function updateGround()
 
 		-- Ensure new pieces are always generated ahead of the player
 		while #groundPieces == 0 or groundPieces[#groundPieces].PrimaryPart.Position.Z < playerZ + groundLength * piecesAhead do
-			local lastZ = #groundPieces > 0 and groundPieces[#groundPieces].PrimaryPart.Position.Z or playerZ
-			local newPosition = CFrame.new(0, 0, lastZ + groundLength)
+			local lastZ = #groundPieces > 0 and groundPieces[#groundPieces].PrimaryPart.Position.Z or spawnCFrame.Position.Z
+			local newPosition = spawnCFrame * CFrame.new(0, 0, lastZ + groundLength - spawnCFrame.Position.Z)
 			spawnGroundPiece(newPosition)
 		end
 
@@ -46,9 +52,10 @@ local function updateGround()
 	end
 end
 
--- Initial ground generation
+-- Initial ground generation at the SpawnLocation
 for i = 1, piecesAhead do
-	spawnGroundPiece(CFrame.new(0, 0, (i - 1) * groundLength))
+	local startPosition = spawnCFrame * CFrame.new(0, 0, (i - 1) * groundLength)
+	spawnGroundPiece(startPosition)
 end
 
 -- Start the ground update loop
