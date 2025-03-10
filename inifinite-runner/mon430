@@ -1,0 +1,24 @@
+local ss = game:GetService('ServerStorage')
+local groundTemp = ss:WaitForChild('GroundPiece')
+local cf = groundTemp:GetPivot()
+
+local length = 25
+local piecesAhead = 5
+local groundPieces = {}
+local moveStep = 0.5
+
+local function spawnGroundPieces(pos)
+	local model = groundTemp:Clone()
+	model:PivotTo(cf + pos)
+	model.Parent = workspace
+	model.GroundPiece.BrickColor = BrickColor.random()
+	table.insert(groundPieces, model)
+end
+
+local function moveGround()
+	-- write this next class
+end
+
+for i=1, piecesAhead, 1 do 
+	spawnGroundPieces(Vector3.new(0,0,-i*length))
+end
